@@ -4,21 +4,38 @@
       <h2 class="title">Bella Face</h2>
     </div>
     <h2 class="tittle-item">Carrinho</h2>
-    <div style="display: flex; width: 70%; border: solid 0.5px #000"></div>
+    <div style="display: flex; width: 70%; border: solid 0.5px #75858c"></div>
     <div class="menu">
-      <div v-for="(index, key) in 5" :key="key">
+      <div v-for="(ordemProduct, key) in cart" :key="key">
         <div class="product">
           <img
-            src="https://m.media-amazon.com/images/I/71wLcthlJhL._AC_SL1500_.jpg"
+            src="https://images.tcdn.com.br/img/img_prod/1130295/produto_teste_47_1_06236ceac4ed4fafdbf22d7cbf23bf7e.png"
             width="100px"
             height="100px"
           />
-          <label class="name-product">Gel de limpeza</label>
-          <label class="value-product">R$ 90,00</label>
-          <img src="@/images/plus.png" width="30px" height="30px" />
-          <label class="value-product">1</label>
-          <img src="@/images/minus.png" width="30px" height="30px" />
-          <img src="@/images/trash.png" width="30px" height="30px" />
+          <label class="name-product">{{ ordemProduct.product.name }}</label>
+          <label class="value-product"
+            >R$ {{ ordemProduct.unitPrice.toFixed(2) }}</label
+          >
+          <img
+            @click="add(ordemProduct)"
+            src="@/images/plus.png"
+            width="30px"
+            height="30px"
+          />
+          <label class="value-product">{{ ordemProduct.quantity }}</label>
+          <img
+            @click="decrease(ordemProduct)"
+            src="@/images/minus.png"
+            width="30px"
+            height="30px"
+          />
+          <img
+            @click="remove(ordemProduct)"
+            src="@/images/trash.png"
+            width="30px"
+            height="30px"
+          />
         </div>
       </div>
     </div>
@@ -28,22 +45,33 @@
         <span class="close" @click="closeModal">&times;</span>
         <h4 style="color: #000">Confira seus itens!</h4>
         <div class="container-cart-modal">
-          <div class="cart-modal" v-for="(index, key) in 10" :key="key">
+          <div
+            class="cart-modal"
+            v-for="(ordemProduct, key) in cart"
+            :key="key"
+          >
             <img
-              src="https://m.media-amazon.com/images/I/71wLcthlJhL._AC_SL1500_.jpg"
+              src="https://images.tcdn.com.br/img/img_prod/1130295/produto_teste_47_1_06236ceac4ed4fafdbf22d7cbf23bf7e.png"
               width="25px"
               height="25px"
             />
-            <label class="name-product-modal">Gel de limpeza</label>
-            <label class="value-product-modal">R$ 90,00</label>
-            <img src="@/images/trash.png" width="20px" height="20px" />
+            <label class="name-product-modal">{{
+              ordemProduct.product.name
+            }}</label>
+            <label class="value-product-modal"
+              >R$ {{ ordemProduct.totalPrice.toFixed(2) }}</label
+            >
+            <img @click="remove(ordemProduct)" src="@/images/trash.png" width="20px" height="20px" />
           </div>
         </div>
-        <div style="display: flex; place-content: center; margin: 5px;">
-          <textarea v-model="comment" placeholder="Adicione algum comentário"></textarea>
+        <div style="display: flex; place-content: center; margin: 5px">
+          <textarea
+            v-model="commentary"
+            placeholder="Adicione algum comentário"
+          ></textarea>
         </div>
         <div>
-          <button class="botao" @click="openModal()">Finalizar Pedido</button>
+          <button class="botao" @click="finishPurchase()">Finalizar Pedido</button>
         </div>
       </div>
     </div>
@@ -51,11 +79,14 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: "Cart",
   data() {
     return {
       showModal: false,
+      cart: [],
+      commentary:""
     };
   },
   methods: {
@@ -65,6 +96,63 @@ export default {
     closeModal() {
       this.showModal = false;
     },
+    async getCart() {
+      var response = await axios
+        .get(`http://localhost:8080/order-product`)
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+      this.cart = response.data;
+    },
+    async add(ordemProduct) {
+
+      await axios
+        .put(`http://localhost:8080/order-product`, {
+          orderId: ordemProduct.id.orderId,
+          productId: ordemProduct.id.productId,
+          quantity: ordemProduct.quantity+1,
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+        this.getCart()
+    },
+    async decrease(ordemProduct) {
+      await axios
+        .put(`http://localhost:8080/order-product`,{
+          orderId: ordemProduct.id.orderId,
+          productId: ordemProduct.id.productId,
+          quantity: ordemProduct.quantity-1,
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+        this.getCart()
+    },
+    async remove(ordemProduct) {
+      await axios
+        .delete(`http://localhost:8080/order-product/${ordemProduct.id.orderId}/${ordemProduct.id.productId}`)
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+        this.getCart()
+    },
+    async finishPurchase() {
+      await axios
+        .post(`http://localhost:8080/order/add-commentary`,{orderId:this.cart[0].id.orderId,commentary:this.commentary})
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+        await axios
+        .delete(`http://localhost:8080/order-product`)
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+        this.$router.push("/products");
+    },
+  },
+  mounted() {
+    this.getCart();
   },
 };
 </script>
@@ -110,7 +198,6 @@ export default {
 .name-product {
   color: #000;
   font-size: 12px;
-  margin-top: 8px;
 }
 .value-product {
   font-size: 14px;
@@ -188,7 +275,6 @@ export default {
 .name-product-modal {
   color: #000;
   font-size: 12px;
-  margin-top: 8px;
 }
 .value-product-modal {
   color: #000;
@@ -212,7 +298,7 @@ export default {
 }
 
 .container-cart-modal::-webkit-scrollbar {
-  width: 5px; 
+  width: 5px;
 }
 
 .container-cart-modal::-webkit-scrollbar-track {
@@ -220,7 +306,7 @@ export default {
 }
 
 .container-cart-modal::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0); 
+  background: rgba(0, 0, 0, 0);
 }
 
 .container-cart-modal::-webkit-scrollbar-thumb:hover {

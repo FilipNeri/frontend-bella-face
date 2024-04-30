@@ -6,13 +6,21 @@
     </div>
     <div class="container-senha">
       <h4>Senha:</h4>
-      <input type="text" class="input" v-model="senha" placeholder="senha" />
+      <input
+        type="password"
+        class="input"
+        password
+        v-model="senha"
+        placeholder="senha"
+      />
     </div>
     <button class="botao" @click="toProducts()">Logar</button>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "Login",
   data() {
@@ -23,7 +31,23 @@ export default {
   },
   methods: {
     toProducts() {
-      this.$router.push("/products");
+      axios
+        .post("http://localhost:8080/customer", {
+          login: this.login,
+          password: this.senha,
+        })
+        .then((response) => {
+          var login = response.data;
+          if (login != -1) {
+            localStorage.setItem('id', login);//nessa versão não tem como passar dados por props
+            this.$router.push("/products");
+          } else {
+            alert("Login ou senha incorretos!");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
     },
     animation() {
       setTimeout(() => {
