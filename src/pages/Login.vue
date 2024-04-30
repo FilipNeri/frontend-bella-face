@@ -42,7 +42,7 @@ export default {
             localStorage.setItem('id', login);//nessa versão não tem como passar dados por props
             this.$router.push("/products");
           } else {
-            alert("Login ou senha incorretos!");
+            alert("Login ou senha incorretos ou horários não permitidos!");
           }
         })
         .catch((error) => {
