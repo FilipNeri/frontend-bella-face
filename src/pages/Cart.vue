@@ -61,7 +61,12 @@
             <label class="value-product-modal"
               >R$ {{ ordemProduct.totalPrice.toFixed(2) }}</label
             >
-            <img @click="remove(ordemProduct)" src="@/images/trash.png" width="20px" height="20px" />
+            <img
+              @click="remove(ordemProduct)"
+              src="@/images/trash.png"
+              width="20px"
+              height="20px"
+            />
           </div>
         </div>
         <div style="display: flex; place-content: center; margin: 5px">
@@ -71,7 +76,9 @@
           ></textarea>
         </div>
         <div>
-          <button class="botao" @click="finishPurchase()">Finalizar Pedido</button>
+          <button class="botao" @click="finishPurchase()">
+            Finalizar Pedido
+          </button>
         </div>
       </div>
     </div>
@@ -79,14 +86,16 @@
 </template>
 
 <script>
-import axios from "axios";
+
+import OrderProduct from "@/services/orderProduct";
+import Order from "@/services/order";
 export default {
   name: "Cart",
   data() {
     return {
       showModal: false,
       cart: [],
-      commentary:""
+      commentary: "",
     };
   },
   methods: {
@@ -97,58 +106,51 @@ export default {
       this.showModal = false;
     },
     async getCart() {
-      var response = await axios
-        .get(`http://localhost:8080/order-product`)
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        });
+      var response = await OrderProduct.getCart().catch((error) => {
+        console.error("Error fetching data:", error);
+      });
       this.cart = response.data;
     },
     async add(ordemProduct) {
-
-      await axios
-        .put(`http://localhost:8080/order-product`, {
-          orderId: ordemProduct.id.orderId,
-          productId: ordemProduct.id.productId,
-          quantity: ordemProduct.quantity+1,
-        })
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        });
-        this.getCart()
+      await OrderProduct.quantity(
+        ordemProduct.id.orderId,
+        ordemProduct.id.productId,
+        ordemProduct.quantity + 1
+      ).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+      this.getCart();
     },
     async decrease(ordemProduct) {
-      await axios
-        .put(`http://localhost:8080/order-product`,{
-          orderId: ordemProduct.id.orderId,
-          productId: ordemProduct.id.productId,
-          quantity: ordemProduct.quantity-1,
-        })
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        });
-        this.getCart()
+      await OrderProduct.quantity(
+        ordemProduct.id.orderId,
+        ordemProduct.id.productId,
+        ordemProduct.quantity - 1
+      ).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+      this.getCart();
     },
     async remove(ordemProduct) {
-      await axios
-        .delete(`http://localhost:8080/order-product/${ordemProduct.id.orderId}/${ordemProduct.id.productId}`)
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        });
-        this.getCart()
+      await OrderProduct.remove(
+        ordemProduct.id.orderId,
+        ordemProduct.id.productId
+      ).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+      this.getCart();
     },
     async finishPurchase() {
-      await axios
-        .post(`http://localhost:8080/order/add-commentary`,{orderId:this.cart[0].id.orderId,commentary:this.commentary})
+      await Order.addCommentary(this.cart[0].id.orderId, this.commentary).catch(
+        (error) => {
+          console.error("Error fetching data:", error);
+        }
+      );
+      await OrderProduct.finish()
         .catch((error) => {
           console.error("Error fetching data:", error);
         });
-        await axios
-        .delete(`http://localhost:8080/order-product`)
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        });
-        this.$router.push("/products");
+      this.$router.push("/products");
     },
   },
   mounted() {

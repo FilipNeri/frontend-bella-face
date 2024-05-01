@@ -4,13 +4,13 @@
       <h4>Login:</h4>
       <input type="text" class="input" v-model="login" placeholder="login" />
     </div>
-    <div class="container-senha">
+    <div class="container-password">
       <h4>Senha:</h4>
       <input
         type="password"
         class="input"
         password
-        v-model="senha"
+        v-model="password"
         placeholder="senha"
       />
     </div>
@@ -19,27 +19,23 @@
 </template>
 
 <script>
-import axios from "axios";
+import Customer from "@/services/customer";
 
 export default {
   name: "Login",
   data() {
     return {
       login: "",
-      senha: "",
+      password: "",
     };
   },
   methods: {
     toProducts() {
-      axios
-        .post("http://localhost:8080/customer", {
-          login: this.login,
-          password: this.senha,
-        })
+      Customer.login(this.login,this.password)
         .then((response) => {
           var login = response.data;
           if (login != -1) {
-            localStorage.setItem('id', login);//nessa versão não tem como passar dados por props
+            localStorage.setItem("id", login); //nessa versão não tem como passar dados por props
             this.$router.push("/products");
           } else {
             alert("Login ou senha incorretos ou horários não permitidos!");
@@ -83,7 +79,7 @@ h4 {
   align-items: start;
   flex-direction: column;
 }
-.container-senha {
+.container-password {
   display: flex;
   justify-content: center;
   align-items: start;

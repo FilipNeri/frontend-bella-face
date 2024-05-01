@@ -23,7 +23,9 @@
 </template>
 
 <script>
-import axios from "axios";
+import Product from "@/services/product";
+import OrderProduct from "@/services/orderProduct";
+import Order from "@/services/order";
 export default {
   name: "Products",
   data() {
@@ -42,39 +44,24 @@ export default {
       this.$router.push("/cart");
     },
     async getProducts() {
-      var response = await axios
-        .get("http://localhost:8080/product")
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        });
+      var response = await Product.getProducts();
       this.products = response.data;
     },
     async getCart() {
-      var response = await axios
-        .get(`http://localhost:8080/order-product`)
-        .catch((error) => {
-          console.error("Error fetching data:", error);
-        });
+      var response = await OrderProduct.getCart().catch((error) => {
+        console.error("Error fetching data:", error);
+      });
       this.cart = response.data;
     },
     async addToCart(product) {
       if (this.order.id == "") {
         var customerId = localStorage.getItem("id");
-        var response = await axios
-          .post("http://localhost:8080/order", {
-            customerId,
-          })
-          .catch((error) => {
-            console.error("Error fetching data:", error);
-          });
+        var response = await Order.createOrder(customerId).catch((error) => {
+          console.error("Error fetching data:", error);
+        });
         this.order = response.data;
       }
-      axios
-        .post("http://localhost:8080/order-product", {
-          orderId: this.order.id,
-          productId: product.id,
-          quantity: "1",
-        })
+      OrderProduct.addToCart(this.order.id, product.id, "1")
         .then((response) => {
           if (response.status == 200) {
             alert("Produto adicionado ao carrinho");
@@ -85,7 +72,6 @@ export default {
           alert("Produto já adicionado");
         });
     },
-
   },
   mounted() {
     this.getProducts();
