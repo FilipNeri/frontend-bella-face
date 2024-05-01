@@ -2,9 +2,9 @@ import { http } from "./config";
 
 export default {
   createOrder: (customerId) => {
-    return http.post("order",{customerId});
+    return http.post("order", { customerId });
   },
-  addCommentary: (orderId,commentary) => {
-    return http.post("order/add-commentary",{orderId,commentary});
+  finishOrder: (orderId, commentary, totalOrder) => {
+    return http.post("order/finish-order", { orderId, commentary, totalOrder });
   },
 };

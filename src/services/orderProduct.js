@@ -1,8 +1,8 @@
 import { http } from "./config";
 
 export default {
-  getCart: () => {
-    return http.get("order-product");
+  getCart: (orderId) => {
+    return http.get(`order-product/${orderId}`);
   },
 
   addToCart: (orderId, productId, quantity) => {

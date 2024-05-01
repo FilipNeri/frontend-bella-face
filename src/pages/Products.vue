@@ -47,25 +47,27 @@ export default {
       var response = await Product.getProducts();
       this.products = response.data;
     },
-    async getCart() {
-      var response = await OrderProduct.getCart().catch((error) => {
+    async getCart(orderId) {
+      var response = await OrderProduct.getCart(orderId).catch((error) => {
         console.error("Error fetching data:", error);
       });
       this.cart = response.data;
     },
-    async addToCart(product) {
-      if (this.order.id == "") {
+    async getOrder(){
         var customerId = localStorage.getItem("id");
         var response = await Order.createOrder(customerId).catch((error) => {
           console.error("Error fetching data:", error);
         });
         this.order = response.data;
-      }
+        this.getCart(this.order.id)
+    },
+    async addToCart(product) {
+
       OrderProduct.addToCart(this.order.id, product.id, "1")
         .then((response) => {
           if (response.status == 200) {
             alert("Produto adicionado ao carrinho");
-            this.getCart();
+            this.getCart(this.order.id);
           }
         })
         .catch(() => {
@@ -75,7 +77,7 @@ export default {
   },
   mounted() {
     this.getProducts();
-    this.getCart();
+    this.getOrder();
   },
 };
 </script>

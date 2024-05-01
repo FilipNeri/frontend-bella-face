@@ -86,7 +86,6 @@
 </template>
 
 <script>
-
 import OrderProduct from "@/services/orderProduct";
 import Order from "@/services/order";
 export default {
@@ -96,20 +95,37 @@ export default {
       showModal: false,
       cart: [],
       commentary: "",
+      order: {
+        id: "",
+        totalOrder: 0,
+        comments: "",
+      },
     };
   },
   methods: {
     openModal() {
-      this.showModal = true;
+      if (this.cart.length > 0) {
+        this.showModal = true;
+      } else {
+        alert("Carrinho vazio");
+      }
     },
     closeModal() {
       this.showModal = false;
     },
-    async getCart() {
-      var response = await OrderProduct.getCart().catch((error) => {
+    async getCart(orderId) {
+      var response = await OrderProduct.getCart(orderId).catch((error) => {
         console.error("Error fetching data:", error);
       });
       this.cart = response.data;
+    },
+    async getOrder() {
+      var customerId = localStorage.getItem("id");
+      var response = await Order.createOrder(customerId).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+      this.order = response.data;
+      this.getCart(this.order.id);
     },
     async add(ordemProduct) {
       await OrderProduct.quantity(
@@ -119,7 +135,7 @@ export default {
       ).catch((error) => {
         console.error("Error fetching data:", error);
       });
-      this.getCart();
+      this.getCart(this.order.id);
     },
     async decrease(ordemProduct) {
       await OrderProduct.quantity(
@@ -129,7 +145,7 @@ export default {
       ).catch((error) => {
         console.error("Error fetching data:", error);
       });
-      this.getCart();
+      this.getCart(this.order.id);
     },
     async remove(ordemProduct) {
       await OrderProduct.remove(
@@ -138,23 +154,33 @@ export default {
       ).catch((error) => {
         console.error("Error fetching data:", error);
       });
-      this.getCart();
+      this.getCart(this.order.id);
+    },
+    valorTotal() {
+      return this.cart.reduce((accumulator, order) => {
+        return accumulator + order.totalPrice;
+      }, 0);
     },
     async finishPurchase() {
-      await Order.addCommentary(this.cart[0].id.orderId, this.commentary).catch(
-        (error) => {
-          console.error("Error fetching data:", error);
-        }
-      );
-      await OrderProduct.finish()
-        .catch((error) => {
+      if (this.cart.length > 0) {
+        await Order.finishOrder(
+          this.cart[0].id.orderId,
+          this.commentary,
+          this.valorTotal()
+        ).catch((error) => {
           console.error("Error fetching data:", error);
         });
-      this.$router.push("/products");
+        await OrderProduct.finish().catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+        this.$router.push("/products");
+      } else {
+        alert("Carrinho vazio");
+      }
     },
   },
   mounted() {
-    this.getCart();
+    this.getOrder();
   },
 };
 </script>
