@@ -138,14 +138,16 @@ export default {
       this.getCart(this.order.id);
     },
     async decrease(ordemProduct) {
-      await OrderProduct.quantity(
-        ordemProduct.id.orderId,
-        ordemProduct.id.productId,
-        ordemProduct.quantity - 1
-      ).catch((error) => {
-        console.error("Error fetching data:", error);
-      });
-      this.getCart(this.order.id);
+      if (ordemProduct.quantity > 0) {
+        await OrderProduct.quantity(
+          ordemProduct.id.orderId,
+          ordemProduct.id.productId,
+          ordemProduct.quantity - 1
+        ).catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+        this.getCart(this.order.id);
+      }
     },
     async remove(ordemProduct) {
       await OrderProduct.remove(
